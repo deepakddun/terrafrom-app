@@ -59,6 +59,25 @@ data "terraform_remote_state" "aws_vpc" {
   }
 }
 
+# sns queue
+
+data "aws_sns_topic" "sns-topic" {
+  name = var.sns_queue
+}
+
+# Create redshift subscritpion
+resource "aws_redshift_event_subscription" "redshift_subscription" {
+  name = "aws-redshift-subscription"
+  sns_topic_arn = data.aws_sns_topic.sns-topic.arn
+  source_type = "cluster"
+  event_categories = ["management"]
+  severity = "INFO"
+  enabled = true
+
+}
+
+
+
 resource "aws_redshift_cluster" "cluster_redshift_cluster" {
   cluster_identifier = "qa-redshift-cluster"
   node_type = "dc2.large"
@@ -66,7 +85,7 @@ resource "aws_redshift_cluster" "cluster_redshift_cluster" {
   cluster_type = "single-node"
   port = "5439"
   master_username = "deepak"
-  master_password = <password-here>
+  master_password = var.redshift_password
   #iam_roles = ["arn:aws:iam::427128480243:role/my_custom_redshift_role"]
   iam_roles = [data.terraform_remote_state.aws_iam_role.outputs.iam_role_arn]
   #cluster_security_groups = [aws_security_group.my_security_group.arn]
