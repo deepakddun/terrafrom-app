@@ -40,6 +40,17 @@ resource "aws_security_group" "redshift_lambda_security_group" {
   }
 }
 
+terraform {
+  backend "s3" {
+   bucket = "nyeisterraformstatedata2"
+    key = "securitygroup/s3/terraform.tfstate"
+    region = "us-east-2"
+
+    dynamodb_table = "terraform-up-and-running-locks-2"
+    encrypt = true
+  }
+}
+
 output "vpc_id" {
   value = tolist(data.aws_vpcs.vpc_ids.ids)[0]
 }
