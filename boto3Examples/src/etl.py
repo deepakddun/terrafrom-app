@@ -17,6 +17,10 @@ for statement in q.CREATE_TABLES_STATEMENT:
 
 
 
+VPC security group
+Specify which instances and devices can connect to the cluster.
+sg-06944748592522417
+
 
 
 

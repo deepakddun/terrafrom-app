@@ -1,5 +1,5 @@
 variable "function_name" {
   type = string
-  default = "terraform-first-lambda-function"
+  default = "terraform-second-lambda-function"
 }
 

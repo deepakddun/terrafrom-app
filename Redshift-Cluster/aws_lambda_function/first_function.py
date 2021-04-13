@@ -22,6 +22,7 @@ def hello(event=None, context=None):
                 cluster_detail = clusters.get('Clusters')[0]
                 print(cluster_detail)
                 db_name = cluster_detail.get('DBName')
+                user_name = cluster_detail.get('MasterUsername')
                 db_endpoint = cluster_detail.get('Endpoint')
                 print(db_endpoint)
                 db_address = db_endpoint.get('Address')
@@ -30,12 +31,15 @@ def hello(event=None, context=None):
                 print(db_name)
                 print(db_address)
                 print(db_port)
+                print(user_name)
 
                 client_data = boto3.client('redshift-data' , region_name = 'us-east-2')
 
-                client_data.execute_statement(
-                    ClusterIdentifier = '',
-                    Database = '',
-                    DbUser = '',
-                    Sql = ''
+                response = client_data.execute_statement(
+                    ClusterIdentifier = cluster_name,
+                    Database = db_name,
+                    DbUser = user_name,
+                    Sql = 'CREATE TABLE TEST (key LONG);'
                 )
+
+                print(response)

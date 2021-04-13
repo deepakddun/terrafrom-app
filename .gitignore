@@ -15,5 +15,7 @@ Redshift-Cluster/**/urllib3-1.26.4.dist-info
 Redshift-Cluster/**/src.zip
 Redshift-Cluster/**/terraform.*
 Redshift-Cluster/**/*terraform*
+boto3Examples/**/.terraform
+
 
 

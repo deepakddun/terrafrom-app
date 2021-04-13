@@ -14,22 +14,20 @@ resource "aws_vpc" "aws-vpc-terraform-custom" {
 
 }
 
+resource "aws_subnet" "aws-subnet-public-subnet" {
+  cidr_block = "10.200.0.0/24"
+  vpc_id = aws_vpc.aws-vpc-terraform-custom.id
+  map_public_ip_on_launch = "true"
+  tags = {
+    SubnetType = "terraform-public-subnet"
+  }
+}
+
 resource "aws_subnet" "aws-subnet-private-subnet" {
   cidr_block = "10.200.1.0/24"
   vpc_id = aws_vpc.aws-vpc-terraform-custom.id
   tags = {
-    subnetType = "terraform-private-subnet"
-  }
-
-
-}
-
-resource "aws_subnet" "aws-subnet-public-subnet" {
-  cidr_block = "10.200.2.0/24"
-  vpc_id = aws_vpc.aws-vpc-terraform-custom.id
-  map_public_ip_on_launch = "true"
-  tags = {
-    subnetType = "terraform-public-subnet"
+    SubnetType = "terraform-private-subnet"
   }
 }
 
@@ -37,6 +35,23 @@ resource "aws_internet_gateway" "terraform-internet-gateway" {
   vpc_id = aws_vpc.aws-vpc-terraform-custom.id
   tags = {
     gateway = "terraform-gateway"
+  }
+}
+
+resource "aws_eip" "lb" {
+    vpc      = true
+    depends_on = [aws_internet_gateway.terraform-internet-gateway]
+    tags = {
+      CreatedBy ="terraform-elasticIP"
+    }
+}
+
+resource "aws_nat_gateway" "gw" {
+  allocation_id = aws_eip.lb.id
+  subnet_id     = aws_subnet.aws-subnet-public-subnet.id
+
+  tags = {
+    CreatedBy = "terraform-nat-gateway"
   }
 }
 
@@ -56,6 +71,10 @@ resource "aws_route_table" "terraform-route-table-public" {
 
 resource "aws_route_table" "terraform-route-table-private" {
   vpc_id = aws_vpc.aws-vpc-terraform-custom.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.gw.id
+  }
   tags = {
     routetable ="terraform-private-routetable"
   }
@@ -75,6 +94,10 @@ resource "aws_route_table_association" "terraform-public-subnet-route-assoc" {
 resource "aws_redshift_subnet_group" "redshift_subnet_group_name" {
   name = "terraform-redshift-subnet-group"
   subnet_ids = [aws_subnet.aws-subnet-private-subnet.id]
+  tags = {
+    CreatedBy = "Terraform",
+    For = "Redshift-Cluster"
+  }
 }
 
 terraform {
@@ -108,3 +131,6 @@ output "redshift_subnet_group_output"  {
   value = aws_redshift_subnet_group.redshift_subnet_group_name.name
 }
 
+output "redshift_subnet_group_id"  {
+  value = aws_redshift_subnet_group.redshift_subnet_group_name.subnet_ids
+}

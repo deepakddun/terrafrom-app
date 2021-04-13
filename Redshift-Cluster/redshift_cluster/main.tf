@@ -59,6 +59,10 @@ data "terraform_remote_state" "aws_vpc" {
   }
 }
 
+data "aws_security_group" "redshift_security_group" {
+    id = var.security_group_id
+}
+
 # sns queue
 
 data "aws_sns_topic" "sns-topic" {
@@ -89,37 +93,37 @@ resource "aws_redshift_cluster" "cluster_redshift_cluster" {
   #iam_roles = ["arn:aws:iam::427128480243:role/my_custom_redshift_role"]
   iam_roles = [data.terraform_remote_state.aws_iam_role.outputs.iam_role_arn]
   #cluster_security_groups = [aws_security_group.my_security_group.arn]
-  vpc_security_group_ids = [aws_security_group.my_security_group.id]
+  vpc_security_group_ids = [data.aws_security_group.redshift_security_group.id]
   cluster_subnet_group_name = data.terraform_remote_state.aws_vpc.outputs.redshift_subnet_group_output
   publicly_accessible = "false"
-  depends_on = [aws_security_group.my_security_group]
+//  depends_on = [aws_security_group.my_security_group]
   final_snapshot_identifier = "false"
   skip_final_snapshot = "true"
 }
 
-resource "aws_security_group" "my_security_group" {
-  name = "redshift_security_group"
-  description = "The security group for redshift"
-  vpc_id = data.terraform_remote_state.aws_vpc.outputs.vpc_id
-  ingress {
-    from_port = 5439
-    protocol = "tcp"
-    to_port = 5439
-    cidr_blocks = ["24.29.75.132/32"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-  Name ="Redshift_Security_Group"
-  }
-
-}
+//resource "aws_security_group" "my_security_group" {
+//  name = "redshift_security_group"
+//  description = "The security group for redshift"
+//  vpc_id = data.terraform_remote_state.aws_vpc.outputs.vpc_id
+//  ingress {
+//    from_port = 5439
+//    protocol = "tcp"
+//    to_port = 5439
+//    cidr_blocks = ["24.29.75.132/32"]
+//  }
+//
+//  egress {
+//    from_port   = 0
+//    to_port     = 0
+//    protocol    = "-1"
+//    cidr_blocks = ["0.0.0.0/0"]
+//  }
+//
+//  tags = {
+//  Name ="Redshift_Security_Group"
+//  }
+//
+//}
 
 terraform {
   backend "s3" {
@@ -137,4 +141,7 @@ output "database_url" {
   value = aws_redshift_cluster.cluster_redshift_cluster.endpoint
 }
 
+output "security_group" {
+  value = data.aws_security_group.redshift_security_group.name
+}
 
